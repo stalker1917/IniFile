@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -78,13 +78,19 @@ namespace IniFile
         /// <param name="name">Name of the property.</param>
         /// <typeparam name="T">The type to coerce the value into.</typeparam>
         /// <returns></returns>
-        public T Get<T>(string name)
+        public T Get<T>(string name, T defvalue)
         {
-            if (_properties.ContainsKey(name))
-                return (T)Convert.ChangeType(_properties[name].Value, typeof(T));
 
-            return default(T);
+            if (_properties.ContainsKey(name))
+                if (typeof(T) == typeof(bool))
+                    if (Convert.ToInt32(_properties[name].Value)==0) return  (T)Convert.ChangeType(false, typeof(T));
+                    else return (T)Convert.ChangeType(true, typeof(T));
+                else return (T)Convert.ChangeType(_properties[name].Value, typeof(T));
+
+            return defvalue;//default(T);
         }
+
+    
 
         /// <summary>
         /// Set a property value.
@@ -124,7 +130,7 @@ namespace IniFile
     /// <summary>
     /// Represenst an INI file that can be read from or written to.
     /// </summary>
-    public class IniFile
+    public class TIniFile
     {
         private readonly IDictionary<string, IniSection> _sections;
 
@@ -147,7 +153,7 @@ namespace IniFile
         /// <summary>
         /// Create a new IniFile instance.
         /// </summary>
-        public IniFile()
+        public TIniFile()
         {
             _sections = new Dictionary<string, IniSection>();
             CommentChar = '#';
@@ -157,7 +163,7 @@ namespace IniFile
         /// Load an INI file from the file system.
         /// </summary>
         /// <param name="path">Path to the INI file.</param>
-        public IniFile(string path) : this()
+        public TIniFile(string path) : this()
         {
             Load(path);
         }
@@ -166,7 +172,7 @@ namespace IniFile
         /// Load an INI file.
         /// </summary>
         /// <param name="reader">A TextReader instance.</param>
-        public IniFile(TextReader reader) : this()
+        public TIniFile(TextReader reader) : this()
         {
             Load(reader);
         }
@@ -231,6 +237,20 @@ namespace IniFile
             }
 
             return section;
+        }
+
+        public T Get<T>(string section, string name, T defvalue)
+        {
+
+           // T result;
+            return Section(section).Get<T>(name,defvalue);
+           // if (result.Equals(default(T))) result = defvaule;
+            // result; 
+        }
+
+        public void Set(string section, string name, string value)
+        {
+            Section(section).Set(name, value);
         }
 
         /// <summary>
